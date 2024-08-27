@@ -1,5 +1,6 @@
 const Section = require("../models/Section");
 const Course = require("../models/Course");
+const SubSection = require("../models/SubSection");
 
 exports.createSection = async(req, res) => {
     try{
@@ -79,17 +80,42 @@ exports.updateSection = async(req, res) =>{
 exports.deleteSection = async(req, res) => {
     try{
         //get id from params
-        const {sectionId} = req.params;
+        const {sectionId, courseId} = req.body;
+
+        await Course.findByIdAndUpdate(courseId, {
+            $pull: {
+                courseContent: sectionId
+            },
+        })
+
+        const section = await Section.findById(sectionId);
+        if(!section){
+            return res.status(404).json({
+            success: false,
+            message: "Section not found",
+            });
+        }
+
+        //delete associated subsection
+        await SubSection.deleteMany({_id: {$in: section.subSection } })
 
         //findByIdAndDelete
         await Section.findByIdAndDelete(sectionId);
 
-        // Todo: Do we need to delete entry from the course schema??
+        const course = await Course.findById(courseId)
+        .populate({
+            path: "courseContent",
+            populate: {
+                path: "subSection",
+            },
+        })
+        .exec()
 
         //return response
         return res.status(200).json({
             success: true,
-            message: "Section Deleted Successfully"
+            message: "Section Deleted Successfully",
+            data: course
         });
 
     }catch(error){
