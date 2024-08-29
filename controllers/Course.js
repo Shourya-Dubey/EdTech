@@ -218,7 +218,7 @@ exports.createCourse = async(req, res) => {
 
 
 // getAllCourses
-exports.showAllCourses = async(req, res) => {
+exports.getAllCourses = async(req, res) => {
     try{
 
         const allCourses = await Course.find(
@@ -231,11 +231,12 @@ exports.showAllCourses = async(req, res) => {
             ratingAndReviews: true,
             studentsEnrolled: true,
           }
-        ).populate("instructor").exec();
+        )
+        .populate("instructor")
+        .exec();
 
         return res.status(200).json({
             success: true,
-            message: "Data for all courses fetched successfully",
             data: allCourses
         });
 
@@ -246,5 +247,54 @@ exports.showAllCourses = async(req, res) => {
             message: "Cannot Fetch course data",
             error: error.message
         })
+    }
+}
+
+
+//getCourseDetails
+exports.getCourseDetails = async(req, res) => {
+    try{
+        //get id
+        const {courseId} = req.body;
+
+        //find course details
+        const courseDetails = await Course.find({ _id: courseId })
+          .populate({
+            path: "instructor",
+            populate: {
+              path: "additionalDetails",
+            },
+          })
+          .populate("category")
+          .populate("ratingAndReviews")
+          .populate({
+            path: "courseContent",
+            populate: {
+              path: "subSection",
+            },
+          })
+          .exec();
+
+        //validation
+        if(!courseDetails){
+            return res.status(400).json({
+                success: false,
+                message: `could not find the ocurse with ${courseId}`
+            });
+        }
+
+        //return responsr
+        return res.status(200).json({
+            success: true,
+            message: "Course Details fetched Successfully",
+            data:courseDetails
+        })
+
+    }catch(error){
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 }
