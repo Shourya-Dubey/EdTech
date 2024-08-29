@@ -67,8 +67,6 @@ const userSchema = new mongoose.Schema(
         ref: "courseProgress",
       },
     ],
-
-    // Add timestamps for when the document is created and last modified
   },
   { timestamps: true }
 );

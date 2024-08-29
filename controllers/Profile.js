@@ -1,42 +1,50 @@
+const { default: mongoose } = require("mongoose");
 const Profile = require("../models/Profile");
 const User = require("../models/User");
+const Course = require("../models/Course");
+const CourseProgress = require("../models/CourseProgress");
 
 
 exports.updateProfile = async(req, res) => {
     try{
-        //fetch data
-        const {dateOfBirth="", about="", contactNumber, gender} = req.body;
+        const {
+            firstName = "",
+            lastName = "",
+            dateOfBirth = "",
+            about = "",
+            contactNumber = "",
+            gender = "",
+        } = req.body
+        const id = req.body.id
 
-        //get userId
-        const id = req.user.id;
-
-        //validation
-        if(!contactNumber || !gender ||!id){
-            return res.status(400).json({
-                success: false,
-                message: "All fields are required"
-            });
-        }
-
-        //find Profile
+        //find Profile by id
         const userDetails = await User.findById(id);
-        
-        const profileId = userDetails.additionalDetails;
+        const profile = await Profile.findById(userDetails.additionalDetails)
 
-        const profileDetails = await Profile.findById(profileId);
+        const user = await User.findByIdAndUpdate(id, {
+            firstName,
+            lastName,
+        })
+        await user.save()
 
         //update Profile
-        profileDetails.dateOfBirth = dateOfBirth;
-        profileDetails.about = about;
-        profileDetails.gender = gender;
-        profileDetails.contactNumber = contactNumber;
-        await profileDetails.save();
+        profile.dateOfBirth = dateOfBirth;
+        profile.about = about;
+        profile.gender = gender;
+        profile.contactNumber = contactNumber;
+        //Save updated profile
+        await profile.save();
+
+        //Find updated user details
+        const updatedUserDetails = await User.findById(id)
+        .populate("additionalDetails")
+        .exec()
 
         //return response
         return res.status(200).json({
             success: true,
             message: "Profile updated Succesfully",
-            profileDetails,
+            updatedUserDetails,
         })
 
     }catch(error){
@@ -55,27 +63,35 @@ exports.deleteAccount = async(req, res) => {
       const id = req.user.id;
 
       //validation
-      const userDetails = await User.findById(id);
-      if (!userDetails) {
+      const user = await user.findById({_id: id})
+      if(!user){
         return res.status(404).json({
-          success: false,
-          message: "User not found",
-        });
+            success: false,
+            message: "User not found",
+        })
       }
 
       //delete userProfile
-      await Profile.findByIdAndDelete({ _id: userDetails.additionalDetails });
-
-      //Todo: unenroll user from all enrolled courses
+      await Profile.findByIdAndDelete({ _id: new mongoose.Types.ObjectId(user.additionalDetails) })
+      for(const courseId of user.courses){
+        await Course.findByIdAndUpdate(
+            courseId,
+            {$pull: {studentsEnroled: id}},
+            {new: true}
+        )
+      }
 
       //delete user
       await User.findByIdAndDelete({ _id: id });
 
       //return response
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: "User Delete Successfully"
-     });
+     })
+     
+     await CourseProgress.deleteMany({userId: id})
+
     }catch(error){
         return res.status(500).json({
             success: false,
@@ -92,6 +108,7 @@ exports.getAllUserDetails = async(req, res) => {
 
         //validation
         const userDetails = await User.findById(id).populate("additionalDetails").exec();
+        console.log(userDetails)
 
         //return response 
         return res.status(200).json({

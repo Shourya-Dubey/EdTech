@@ -10,25 +10,27 @@ exports.createSubSection = async(req, res) => {
         const {sectionId, title, timeDuration, description} = req.body;
 
         //extract file/video
-        const video = req.files.videoFile;
+        const video = req.files.video;
 
         //validation
-        if(!sectionId || !title || !!timeDuration || !description){
+        if(!sectionId || !title || !!video || !description){
             return res.status(400).json({
                 success: false,
                 message: "All fields are required"
             });
         }
+        console.log(video)
 
         //upload video to cloudinary
         const uploadDetails = await uploadImageToCloudinary(video, process.env.FOLDER_NAME);
+        console.log(uploadDetails)
 
         //create subsection
         const subSectionDetails = await SubSection.create({
-            title: title,
-            timeDuration: timeDuration,
-            description: description,
-            videoUrl: uploadDetails.secure_url
+          title: title,
+          timeDuration: `${uploadDetails.duration}`,
+          description: description,
+          videoUrl: uploadDetails.secure_url,
         });
 
         //update section with sub section ObjectId
@@ -36,7 +38,7 @@ exports.createSubSection = async(req, res) => {
             {$push: {
                 subSection: subSectionDetails._id
             }}, 
-            {new:true}) //Todo log updated section here, after adding populate query
+            {new:true}).populate("subSection")
 
         //retrun response
         return res.status(200).json({
@@ -46,6 +48,7 @@ exports.createSubSection = async(req, res) => {
         });
 
     }catch(error){
+        console.error("Error creating new sub-section:", error);
         return res.status(500).json({
             success: false,
             message: "Internal server error",
@@ -65,7 +68,7 @@ exports.updateSubSection = async(req, res) =>{
         if(!subSection){
             return res.status(404).json({
             success: false,
-            message: "SubSection notfound",
+            message: "SubSection not found",
             });
         }
 

@@ -18,8 +18,8 @@ exports.createSection = async(req, res) => {
         //create section
         const newSection = await Section.create({sectionName});
 
-        //update course with sectin ObjectId
-        const updatedCourseDetails = await Course.findByIdAndUpdate(courseId, 
+        //update course with section ObjectId
+        const updatedCourse = await Course.findByIdAndUpdate(courseId, 
             {
                 $push:{
                     courseContent: newSection._id,
@@ -32,7 +32,7 @@ exports.createSection = async(req, res) => {
         return res.status(200).json({
             success: true,
             message: "Section Created Successfully",
-            updatedCourseDetails
+            updatedCourse
         });
 
     }catch(error){
@@ -48,7 +48,7 @@ exports.createSection = async(req, res) => {
 exports.updateSection = async(req, res) =>{
     try{
         //fetch data
-        const {sectionName, sectionId} = req.body;
+        const {sectionName, sectionId, courseId} = req.body;
 
         //validate data
         if (!sectionName || !sectionId) {
@@ -61,10 +61,21 @@ exports.updateSection = async(req, res) =>{
         //update data
         const section = await Section.findByIdAndUpdate(sectionId, {sectionName}, {new:true});
 
+        const course = await Course.findByI(courseId)
+        .populate({
+            path: "courseContent",
+            populate: {
+            path: "subSection",
+            },
+        })
+        .exec();
+        console.log(course);
+
         //return response
         return res.status(200).json({
             success: true,
-            message: "Section Updated Successfully"
+            message: section,
+            data: course
         });
 
     }catch(error){

@@ -14,12 +14,12 @@ exports.resetPasswordToken = async(req, res) => {
       if (!user) {
         return res.json({
           success: false,
-          message: "Your Email is not registered with us",
+          message: `This Email: ${email} is not Registered with us Enter a valid Email`,
         });
       }
 
       //generate token
-      const token = crypto.randomUUID();
+      const token = crypto.randomBytes(20).toString("hex")
 
       //update user by adding token and expiration time
       const updateDetails = await User.findOneAndUpdate(
@@ -29,7 +29,8 @@ exports.resetPasswordToken = async(req, res) => {
           resetPasswordExpires: Date.now() + 5 * 60 * 1000,
         },
         { new: true }
-      );
+      )
+      console.log("DETAILS", updateDetails);
 
       //create url
       const url = `http://localhost:3000/update-password/${token}`;
@@ -84,18 +85,18 @@ exports.resetPassword = async(req, res)=>{
         }
 
         //toke time check
-        if(userDetails.resetPasswordExpires < Date.now()){
-            return res.json({
+        if(!(userDetails.resetPasswordExpires > Date.now())){
+            return res.status(403).json({
                 success: false,
                 message: "Token is expired, please regenerate your token"
             });
         }
 
         //hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const encryptedPassword = await bcrypt.hash(password, 10);
 
         //update password
-        await User.findOneAndUpdate({token: token}, {password: hashedPassword}, {new:true});
+        await User.findOneAndUpdate({token: token}, {password: encryptedPassword}, {new:true});
 
         //return response
         return res.status(200).json({
@@ -105,10 +106,10 @@ exports.resetPassword = async(req, res)=>{
 
 
     }catch(error){
-        console.log(error);
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong while reset password"
-        })
+       return res.json({
+        error: error.message,
+        success: false,
+        message: `Some Error is updating the Password`
+       })
     }
 }
