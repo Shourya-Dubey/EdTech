@@ -17,7 +17,6 @@ const OTPSchema = new mongoose.Schema({
   },
 });
 
-// Define a function to send emails
 async function sendVerificationEmail(email, otp) {
   // Create a transporter to send emails
 
