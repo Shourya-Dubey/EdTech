@@ -6,58 +6,55 @@ const CourseProgress = require("../models/CourseProgress");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 
 
-exports.updateProfile = async(req, res) => {
-    try{
-        const {
-            firstName = "",
-            lastName = "",
-            dateOfBirth = "",
-            about = "",
-            contactNumber = "",
-            gender = "",
-        } = req.body
-        const id = req.body.id
+exports.updateProfile = async (req, res) => {
+  try {
+    const {
+      firstName = "",
+      lastName = "",
+      dateOfBirth = "",
+      about = "",
+      contactNumber = "",
+      gender = "",
+    } = req.body;
+    const id = req.user.id;
 
-        //find Profile by id
-        const userDetails = await User.findById(id);
-        const profile = await Profile.findById(userDetails.additionalDetails)
+    // Find the profile by id
+    const userDetails = await User.findById(id);
+    const profile = await Profile.findById(userDetails.additionalDetails);
 
-        const user = await User.findByIdAndUpdate(id, {
-            firstName,
-            lastName,
-        })
-        await user.save()
+    const user = await User.findByIdAndUpdate(id, {
+      firstName,
+      lastName,
+    });
+    await user.save();
 
-        //update Profile
-        profile.dateOfBirth = dateOfBirth;
-        profile.about = about;
-        profile.gender = gender;
-        profile.contactNumber = contactNumber;
-        //Save updated profile
-        await profile.save();
+    // Update the profile fields
+    profile.dateOfBirth = dateOfBirth;
+    profile.about = about;
+    profile.contactNumber = contactNumber;
+    profile.gender = gender;
 
+    // Save the updated profile
+    await profile.save();
 
-        //Find updated user details
-        const updatedUserDetails = await User.findById(id)
-        .populate("additionalDetails")
-        .exec()
+    // Find the updated user details
+    const updatedUserDetails = await User.findById(id)
+      .populate("additionalDetails")
+      .exec();
 
-        //return response
-        return res.status(200).json({
-            success: true,
-            message: "Profile updated Succesfully",
-            updatedUserDetails,
-        })
-
-    }catch(error){
-        return res.status(500).json({
-            success: false,
-            error: error.message,
-            message: "in catch block"
-        });
-    }
+    return res.json({
+      success: true,
+      message: "Profile updated successfully",
+      updatedUserDetails,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
 };
-
 
 //delete account
 exports.deleteAccount = async(req, res) => {
@@ -108,7 +105,6 @@ exports.getAllUserDetails = async(req, res) => {
     try{
         //fetch id
         const id = req.user.id;
-        console.log("inside userDetails")
         //validation
         const userDetails = await User.findById(id).populate("additionalDetails").exec();
         console.log(userDetails)

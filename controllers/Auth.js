@@ -69,7 +69,7 @@ exports.signup = async (req, res) => {
       // OTP not found for the email
       return res.status(400).json({
         success: false,
-        message: "The OTP is not valid",
+        message: "The OTP is not found",
       });
     } else if (otp !== response[0].otp) {
       // Invalid OTP
