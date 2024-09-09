@@ -16,7 +16,7 @@ const dotenv = require("dotenv");
 // Loading environment variables from .env file
 dotenv.config();
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4004;
 
 
 //database connect
