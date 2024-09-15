@@ -100,6 +100,7 @@ exports.verifyPayment = async (req, res) => {
 
   if (expectedSignature === razorpay_signature) {
     await enrollStudents(courses, userId, res);
+    
     return res.status(200).json({ success: true, message: "Payment Verified" });
   }
 
