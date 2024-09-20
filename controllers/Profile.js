@@ -158,6 +158,7 @@ exports.getEnrolledCourses = async (req, res) => {
         },
       })
       .exec()
+
     userDetails = userDetails.toObject()
     var SubsectionLength = 0
     for (var i = 0; i < userDetails.courses.length; i++) {
@@ -232,6 +233,6 @@ exports.instructorDashboard = async (req, res) => {
     res.status(200).json({ courses: courseData })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ message: "Server Error" })
+    res.status(500).json({ message: "Internal Server Error" })
   }
 }
