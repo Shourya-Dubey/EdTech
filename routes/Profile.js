@@ -7,7 +7,7 @@ const {deleteAccount,
   updateDisplayPicture,
   getEnrolledCourses,
   instructorDashboard,
-} = require("../controllers/profile");
+} = require("../controllers/Profile");
 
 
 // Delet User Account
